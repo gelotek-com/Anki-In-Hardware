@@ -57,17 +57,12 @@ bool downloadFile(const String& filename) {
 
     WiFiClient* stream = http.getStreamPtr();
     uint8_t buff[512];
-    int total = 0;
-
-    while (http.connected() && (stream->available() > 0 || total < http.getSize())) {
-      size_t size = stream->available();
-      if (size) {
-        int c = stream->readBytes(buff, (size > sizeof(buff) ? sizeof(buff) : size));
-        file.write(buff, c);
-        total += c;
-      }
-      delay(1);
+    while (stream->connected() || stream->available()) {
+        int c = stream->readBytes(buff, sizeof(buff));
+        if (c > 0) file.write(buff, c);
     }
+
+
 
     file.close();
     Serial.println("Saved: " + filename);

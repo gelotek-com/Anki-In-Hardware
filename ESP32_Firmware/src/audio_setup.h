@@ -21,3 +21,4 @@ void skipWavHeader(File &file);
 void playAudio(String path);
 void playFrontAudio(int button3Pin, int button1Pin, int64_t cardId);
 int playBackAudio(int button1Pin, int button2Pin, int button3Pin, int64_t cardId);
+void clearRootFiles();

@@ -1,4 +1,5 @@
 #include "setup_buttons.h"
+#include "audio_setup.h"
 
 const int button1Pin = 1; //yellow button
 const int button2Pin = 0; //red button
@@ -10,15 +11,28 @@ void setupButtons(){
     pinMode(button3Pin, INPUT_PULLUP);
 }
  
-void waitForButton(int pin, int led, const char* message) {
+void waitForButton(int ledGreen,int ledBlue, const char* message) {
   Serial.println(message);
-  digitalWrite(led, HIGH);
-  while (digitalRead(pin) == HIGH) {
+  digitalWrite(ledGreen, HIGH);
+  digitalWrite(ledBlue, HIGH);
+
+  while (true) {
+    if (digitalRead(button1Pin) == LOW) {
+      digitalWrite(ledGreen, LOW);
+      digitalWrite(ledBlue, LOW);
+      delay(300);
+      return;
+    }
+    if (digitalRead(button3Pin) == LOW) {
+      delay(300);
+      clearRootFiles();
+      playAudio("/keep/clear.wav");
+    }
     delay(50);
     yield();
   }
-  digitalWrite(led, LOW);
-  delay(300);
+
+
 }
 
 int waitForStudy(int pin, int pin2, int led, const char* message) {

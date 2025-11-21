@@ -2,6 +2,7 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include <WiFi.h>
 
 const int SD_CS   = 7;
 const int SD_MOSI = 6;
@@ -93,5 +94,19 @@ int playBackAudio(int button1Pin, int button2Pin, int button3Pin, int64_t cardId
       }
       delay(50);
       yield();
+    }
+}
+void clearRootFiles() {
+    File root = SD.open("/");
+    File file = root.openNextFile();
+
+    while (file) {
+        if (!file.isDirectory()) {
+            String path = "/";
+            path = path + file.name();
+            Serial.printf("Removing: %s\n", path.c_str());
+            SD.remove(path);
+        }
+        file = root.openNextFile();
     }
 }

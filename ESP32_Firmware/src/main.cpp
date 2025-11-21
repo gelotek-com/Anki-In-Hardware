@@ -16,12 +16,12 @@ void setup() {
   setupAudio();
   setupWiFi();
 
-  waitForButton(button1Pin, ledGreen, "Press START to begin study.");
+  waitForButton(ledGreen, ledBlue, "Press YELLOW to start or BLUE to empty the sd");
 
   //get the cards from the server
   String cardData = HTTPboot();
 
-  playAudio("/start.wav");
+  playAudio("/keep/start.wav");
 
   //json for HTTPout
   JsonDocument easeDoc;
@@ -33,8 +33,14 @@ void setup() {
   deserializeJson(doc, cardData);
   JsonArray cards = doc["cards"].as<JsonArray>();
 
+  playAudio("/keep/downloading.wav");
+  digitalWrite(ledGreen, HIGH);
+
   //downloading mp3 files
   downloadAllAudio(cards);
+
+  digitalWrite(ledGreen, LOW);
+  playAudio("/keep/download.wav");
 
   //study session
   for (JsonObject card : cards) {
@@ -71,7 +77,7 @@ void setup() {
   HTTPout(ledRed, jsonOut);
 
   //session complete
-  playAudio("/end.wav");
+  playAudio("/keep/end.wav");
   Serial.println("Study session complete.");
   digitalWrite(ledGreen, HIGH); 
 }
