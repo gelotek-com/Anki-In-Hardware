@@ -12,5 +12,5 @@ std::string HTTPboot();
 void HTTPout(int ledRed, const std::string &jsonOut);
 
 // Audio downloads
-void downloadAllAudio(JsonArray cards);
+void downloadAllAudio_ext(JsonArray cards);
 void DownloadSpecificAudio(const std::string &path);

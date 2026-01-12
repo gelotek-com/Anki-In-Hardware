@@ -1,4 +1,5 @@
 #include "audio_setup.h"
+#include "ext_flash.h"
 
 #include <stdio.h>
 #include <string>
@@ -7,6 +8,7 @@
 #include "freertos/task.h"
 
 #include "esp_log.h"
+//#include "esp_vfs_littlefs.h"
 #include "esp_vfs.h"
 #include "esp_littlefs.h"
 
@@ -27,6 +29,12 @@ static FILE *wavFile = nullptr;
 
 void setupAudio()
 {
+    vTaskDelay(pdMS_TO_TICKS(200));
+
+    mount_extflash(); //ADDED
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+
     ESP_LOGI(TAG, "Initializing LittleFS...");
     vTaskDelay(pdMS_TO_TICKS(200));
 
@@ -57,6 +65,8 @@ void setupAudio()
 
     ledc_timer_config(&timer);
 
+    // LEDC Channel
+
     ledc_channel_config_t channel = {};
     channel.gpio_num = AUDIO_PIN;
     channel.speed_mode = LEDC_LOW_SPEED_MODE;
@@ -71,41 +81,29 @@ void setupAudio()
     ledc_channel_config(&channel);
 }
 
-
 static void skipWavHeader(FILE *file)
 {
     fseek(file, 44, SEEK_SET);
 }
 
-void clearRootFiles()
-{
-    DIR *dir = opendir("/littlefs");
+void clearExtFiles(){
+    DIR *dir = opendir("/extflash");
     if (!dir) return;
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         std::string name = entry->d_name;
-
-        if (name == "clear.wav" ||
-            name == "download.wav" ||
-            name == "downloading.wav" ||
-            name == "end.wav" ||
-            name == "start.wav" ||
-            name == "response.wav") {
-
-            ESP_LOGI(TAG, "Keeping: %s", name.c_str());
-        } else {
-            std::string path = "/littlefs/" + name;
-            ESP_LOGI(TAG, "Removing: %s", path.c_str());
-            unlink(path.c_str());
-        }
+        std::string path = "/extflash/" + name;
+        ESP_LOGI(TAG, "Removing: %s", path.c_str());
+        unlink(path.c_str());
+        
     }
 
     closedir(dir);
-    ESP_LOGI(TAG, "Finished clearing LittleFS");
+    ESP_LOGI(TAG, "Finished clearing External Flash");
 }
 
-void clearALLRootFiles(){
+void clearIntFiles (){
     DIR *dir = opendir("/littlefs");
     if (!dir) return;
 
@@ -122,10 +120,9 @@ void clearALLRootFiles(){
     ESP_LOGI(TAG, "Finished clearing LittleFS");
 }
 
-
-void playAudio(const std::string &path)
+void playAudio(const std::string &path, const std::string &storage)
 {
-    std::string fullPath = "/littlefs" + path;
+    std::string fullPath = storage + path;
     wavFile = fopen(fullPath.c_str(), "rb");
 
     if (!wavFile) {
@@ -156,11 +153,11 @@ void playAudio(const std::string &path)
 void playFrontAudio(int button3Pin, int button1Pin, int64_t cardId)
 {
     std::string file = "/" + std::to_string(cardId) + "_front.wav";
-    playAudio(file);
+    playAudio(file, "/extflash");
 
     while (true) {
         if (gpio_get_level((gpio_num_t)button3Pin) == 0) {
-            playAudio(file);
+            playAudio(file, "/extflash");
             vTaskDelay(pdMS_TO_TICKS(300));
         }
         if (gpio_get_level((gpio_num_t)button1Pin) == 0) {
@@ -174,11 +171,11 @@ void playFrontAudio(int button3Pin, int button1Pin, int64_t cardId)
 int playBackAudio(int button1Pin, int button2Pin, int button3Pin, int64_t cardId)
 {
     std::string file = "/" + std::to_string(cardId) + "_back.wav";
-    playAudio(file);
+    playAudio(file, "/extflash");
 
     while (true) {
         if (gpio_get_level((gpio_num_t)button3Pin) == 0) {
-            playAudio(file);
+            playAudio(file, "/extflash");
             vTaskDelay(pdMS_TO_TICKS(300));
         }
         if (gpio_get_level((gpio_num_t)button1Pin) == 0) {
@@ -193,10 +190,10 @@ int playBackAudio(int button1Pin, int button2Pin, int button3Pin, int64_t cardId
     }
 }
 
-bool checkAudioFiles(int64_t cardId)
+bool checkAudioFiles_ext(int64_t cardId)
 {
-    std::string front = "/littlefs/" + std::to_string(cardId) + "_front.wav";
-    std::string back  = "/littlefs/" + std::to_string(cardId) + "_back.wav";
+    std::string front = "/extflash/" + std::to_string(cardId) + "_front.wav";
+    std::string back  = "/extflash/" + std::to_string(cardId) + "_back.wav";
 
     FILE *f1 = fopen(front.c_str(), "r");
     FILE *f2 = fopen(back.c_str(), "r");

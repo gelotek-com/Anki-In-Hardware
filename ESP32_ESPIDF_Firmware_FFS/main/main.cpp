@@ -17,8 +17,10 @@
 #include "setup_buttons.h"
 #include "http_setup.h"
 #include "audio_setup.h"
+#include "ext_flash.h"
 
 static const char *TAG = "MAIN";
+
 
 extern "C" void app_main(void)
 {
@@ -37,12 +39,12 @@ extern "C" void app_main(void)
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
-    setupAudio();
+    setupAudio(); // setup audio  + extflash
     setupWiFi();
 
 
     /*
-    clearALLRootFiles();
+    clearIntFiles();
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
@@ -52,15 +54,16 @@ extern "C" void app_main(void)
     DownloadSpecificAudio("/download.wav");
     DownloadSpecificAudio("/downloading.wav");
     DownloadSpecificAudio("/end.wav");
-    
     */
+
+    
 
     
 
 
     // Startup audio
-    playAudio("/start.wav");
-    playAudio("/response.wav");
+    playAudio("/start.wav", "/littlefs");
+    playAudio("/response.wav", "/littlefs");
 
     // Wait for user action
     waitForButton(
@@ -88,14 +91,14 @@ extern "C" void app_main(void)
     JsonArray cards = doc["cards"].as<JsonArray>();
 
     // Download all audio files
-    downloadAllAudio(cards);
+    downloadAllAudio_ext(cards);
 
     // Reset LEDs (because of waitForButton)
     gpio_set_level(ledGreen, 0);
     gpio_set_level(ledRed, 0);
     gpio_set_level(ledBlue, 0);
 
-    playAudio("/download.wav");
+    playAudio("/download.wav", "/littlefs");
 
     // Study session
     for (JsonObject card : cards) {
@@ -103,7 +106,7 @@ extern "C" void app_main(void)
         std::string front = card["front"].as<std::string>();
         std::string back  = card["back"].as<std::string>();
 
-        if (checkAudioFiles(cardId)) {
+        if (checkAudioFiles_ext(cardId)) {
             ESP_LOGI(TAG, "---- Next card ----");
             ESP_LOGI(TAG, "Front: %s", front.c_str());
 
@@ -141,7 +144,7 @@ extern "C" void app_main(void)
     HTTPout(ledRed, jsonOut);
 
     // Session complete
-    playAudio("/end.wav");
+    playAudio("/end.wav", "/littlefs");
     ESP_LOGI(TAG, "Study session complete.");
 
     gpio_set_level(ledGreen, 1);
@@ -151,4 +154,3 @@ extern "C" void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-

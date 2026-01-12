@@ -5,6 +5,7 @@
 
 #include "esp_log.h"
 #include "esp_http_client.h"
+//#include "esp_vfs_littlefs.h"
 #include "esp_vfs.h"
 #include "esp_littlefs.h"
 
@@ -16,7 +17,6 @@ static const char *TAG = "HTTP";
 
 // Server address
 static const char *SERVER = "http://192.168.1.100:8000";
-
 
 static esp_err_t http_event_handler(esp_http_client_event_t *evt)
 {
@@ -32,7 +32,6 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
     }
     return ESP_OK;
 }
-
 
 struct HttpBuffer {
     std::string *response;
@@ -62,7 +61,7 @@ std::string HTTPboot()
     esp_http_client_config_t config = {};
     config.url = "http://192.168.1.100:8000/boot";
     config.method = HTTP_METHOD_POST;
-    config.event_handler = http_event_handler_json;  // ← qui ora esiste
+    config.event_handler = http_event_handler_json;
     config.user_data = &buf;
     config.timeout_ms = 10000;
 
@@ -127,9 +126,9 @@ void HTTPout(int ledRed, const std::string &jsonOut)
     esp_http_client_cleanup(client);
 }
 
-bool downloadFile(const std::string &filename)
+bool downloadFile_ext(const std::string &filename)
 {
-    std::string path = "/littlefs/" + filename;
+    std::string path = "/extflash/" + filename;
     std::string url  = std::string(SERVER) + "/audio/" + filename;
 
     // Se esiste già → skip
@@ -170,7 +169,7 @@ bool downloadFile(const std::string &filename)
 }
 
 
-void downloadAllAudio(JsonArray cards)
+void downloadAllAudio_ext(JsonArray cards)
 {
     for (JsonObject card : cards) {
         int64_t cardId = card["id"].as<long long>();
@@ -181,7 +180,7 @@ void downloadAllAudio(JsonArray cards)
         };
 
         for (auto &file : files) {
-            std::string path = "/littlefs/" + file;
+            std::string path = "/extflash/" + file;
 
             FILE *f = fopen(path.c_str(), "r");
             if (f) {
@@ -191,7 +190,7 @@ void downloadAllAudio(JsonArray cards)
             }
 
             ESP_LOGI(TAG, "Downloading: %s", file.c_str());
-            if (!downloadFile(file)) {
+            if (!downloadFile_ext(file)) {
                 ESP_LOGE(TAG, "Failed: %s", file.c_str());
             }
         }

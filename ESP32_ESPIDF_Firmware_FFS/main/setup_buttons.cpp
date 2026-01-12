@@ -9,10 +9,10 @@
 
 static const char *TAG = "BUTTONS";
 
+
 const int button1Pin = GPIO_NUM_1; // yellow
 const int button2Pin = GPIO_NUM_0; // red
 const int button3Pin = GPIO_NUM_2; // blue
-
 
 void setupButtons()
 {
@@ -32,8 +32,6 @@ void setupButtons()
     ESP_LOGI(TAG, "Buttons configured");
 }
 
-
-
 void waitForButton(int ledGreen, int ledBlue, int ledRed, const char *message)
 {
     ESP_LOGI(TAG, "%s", message);
@@ -52,21 +50,20 @@ void waitForButton(int ledGreen, int ledBlue, int ledRed, const char *message)
         if (gpio_get_level((gpio_num_t)button3Pin) == 0) {
             vTaskDelay(pdMS_TO_TICKS(300));
 
-            clearRootFiles();
-            playAudio("/clear.wav");
+            clearExtFiles();
+            playAudio("/clear.wav", "/littlefs");
 
             gpio_set_level((gpio_num_t)ledGreen, 1);
             gpio_set_level((gpio_num_t)ledRed, 1);
             gpio_set_level((gpio_num_t)ledBlue, 1);
 
-            playAudio("/downloading.wav");
+            playAudio("/downloading.wav", "/littlefs");
             return;
         }
 
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
-
 
 
 int waitForStudy(int pin, int pin2, int led, const char *message)
