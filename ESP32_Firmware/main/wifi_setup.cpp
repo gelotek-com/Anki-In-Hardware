@@ -19,10 +19,7 @@ static const char *password = "";
 static bool wifi_connected = false;
 
 
-static void wifi_event_handler(void *arg,
-                               esp_event_base_t event_base,
-                               int32_t event_id,
-                               void *event_data)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
@@ -39,7 +36,6 @@ static void wifi_event_handler(void *arg,
         ESP_LOGI(TAG, "Got IP address");
     }
 }
-
 
 void setupWiFi()
 {
@@ -80,7 +76,6 @@ void setupWiFi()
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
     esp_wifi_start();
 
-    // BLOCKING wait (Arduino-style behavior)
     while (!wifi_connected) {
         ESP_LOGI(TAG, ".");
         vTaskDelay(pdMS_TO_TICKS(500));

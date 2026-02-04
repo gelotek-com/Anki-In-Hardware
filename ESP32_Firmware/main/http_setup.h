@@ -5,11 +5,11 @@
 
 #include <ArduinoJson.h>
 
-// Boot: get cards JSON from server
+// Get cards JSON from server
 std::string HTTPboot();
 
 // Send study results
-void HTTPout(int ledRed, const std::string &jsonOut);
+void HTTPout(const std::string &jsonOut);
 
 // Audio downloads
 void downloadAllAudio_ext(JsonArray cards);

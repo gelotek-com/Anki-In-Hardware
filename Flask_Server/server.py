@@ -31,25 +31,28 @@ def clear_audio_folder():
             print(f"Failed to delete {file_path}. Reason: {e}")
 
 
-
 def generate_tts_audio(text, filename_base, lang):
     """
     Generate TTS MP3 and WAV files for a given text.
-    WAV format: mono, 16kHz, 8-bit unsigned PCM
+    WAV format: stereo, 16kHz, 16-bit unsigned PCM
     """
     mp3_path = os.path.join(AUDIO_FOLDER, f"{filename_base}.mp3")
     wav_path = os.path.join(AUDIO_FOLDER, f"{filename_base}.wav")
 
+    # Skip if WAV already exists
     if os.path.exists(wav_path):
         return wav_path
-    
+
+    # Generate MP3
     tts = gTTS(text=text, lang=lang)
     tts.save(mp3_path)
 
     audio = AudioSegment.from_mp3(mp3_path)
+    
     audio = audio.set_frame_rate(16000)   # 16 kHz
-    audio = audio.set_channels(1)         # mono
-    audio = audio.set_sample_width(1)     # 8-bit PCM
+    audio = audio.set_channels(2)         # stereo
+    audio = audio.set_sample_width(2)     # 16-bit PCM
+
     audio.export(wav_path, format="wav")
 
     return wav_path
@@ -65,7 +68,7 @@ def get_anki_cards():
     #new cards, but we dont want ALL the cards of the imported deck
     new_cards = invoke('findCards', query='deck:B1_Wortliste_DTZ_Goethe is:new')
     if new_cards:
-        due_cards = [new_cards[randint(10,100)], new_cards[randint(10,100)]]
+        due_cards = [new_cards[randint(10,100)]]
     else:
         due_cards = []
 
@@ -76,7 +79,7 @@ def get_anki_cards():
         print("\nCongratulations! You have finished this deck for now.\n")
         sys.exit(0)
 
-    print(f'\nDue cards in test2: {due_cards}')
+    print(f'\nDue cards in German deck: {due_cards}')
     show_cards = invoke('cardsInfo', cards=due_cards)
     #print(show_cards)
 
@@ -104,6 +107,7 @@ def get_anki_cards():
         converted.append(card)
 
     return converted
+
 
 def make_request(action, **params):
     return {'action': action, 'params': params, 'version': 6}

@@ -9,14 +9,13 @@
 #include "esp_vfs.h"
 #include "esp_littlefs.h"
 
-#include "driver/gpio.h"
-
 #include <ArduinoJson.h>
 
 static const char *TAG = "HTTP";
 
 // Server address
 static const char *SERVER = "http://192.168.1.100:8000";
+
 
 static esp_err_t http_event_handler(esp_http_client_event_t *evt)
 {
@@ -95,7 +94,7 @@ static esp_err_t http_event_handler_capture(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-void HTTPout(int ledRed, const std::string &jsonOut)
+void HTTPout(const std::string &jsonOut)
 {
     std::string response;
 
@@ -120,18 +119,17 @@ void HTTPout(int ledRed, const std::string &jsonOut)
         ESP_LOGI(TAG, "Ease response [%d]: %s", status, response.c_str());
     } else {
         ESP_LOGE(TAG, "HTTPout failed: %s", esp_err_to_name(err));
-        gpio_set_level((gpio_num_t)ledRed, 1);
     }
 
     esp_http_client_cleanup(client);
 }
+
 
 bool downloadFile_ext(const std::string &filename)
 {
     std::string path = "/extflash/" + filename;
     std::string url  = std::string(SERVER) + "/audio/" + filename;
 
-    // Se esiste già → skip
     FILE *check = fopen(path.c_str(), "r");
     if (check) {
         fclose(check);
@@ -139,7 +137,6 @@ bool downloadFile_ext(const std::string &filename)
         return true;
     }
 
-    // Apri file PRIMA
     FILE *file = fopen(path.c_str(), "wb");
     if (!file) {
         ESP_LOGE(TAG, "Failed to open file: %s", path.c_str());
@@ -197,7 +194,6 @@ void downloadAllAudio_ext(JsonArray cards)
     }
 }
 
-
 void DownloadSpecificAudio(const std::string &path)
 {
     std::string fullPath = "/littlefs" + path;
@@ -212,7 +208,6 @@ void DownloadSpecificAudio(const std::string &path)
 
     std::string url = std::string(SERVER) + "/audio" + path;
 
-    // OPEN FILE FIRST
     FILE *file = fopen(fullPath.c_str(), "wb");
     if (!file) {
         ESP_LOGE(TAG, "Failed to open file: %s", fullPath.c_str());

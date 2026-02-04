@@ -5,7 +5,6 @@ idf_component_register(
         "http_setup.cpp"
         "wifi_setup.cpp"
         "setup_buttons.cpp"
-        "setup_leds.cpp"
         "ext_flash.cpp"
 
     INCLUDE_DIRS

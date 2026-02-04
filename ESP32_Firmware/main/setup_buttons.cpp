@@ -32,17 +32,12 @@ void setupButtons()
     ESP_LOGI(TAG, "Buttons configured");
 }
 
-void waitForButton(int ledGreen, int ledBlue, int ledRed, const char *message)
+void waitForButton(const char *message)
 {
     ESP_LOGI(TAG, "%s", message);
 
-    gpio_set_level((gpio_num_t)ledGreen, 1);
-    gpio_set_level((gpio_num_t)ledBlue, 1);
-
     while (true) {
         if (gpio_get_level((gpio_num_t)button1Pin) == 0) {
-            gpio_set_level((gpio_num_t)ledGreen, 0);
-            gpio_set_level((gpio_num_t)ledBlue, 0);
             vTaskDelay(pdMS_TO_TICKS(300));
             return;
         }
@@ -53,35 +48,8 @@ void waitForButton(int ledGreen, int ledBlue, int ledRed, const char *message)
             clearExtFiles();
             playAudio("/clear.wav", "/littlefs");
 
-            gpio_set_level((gpio_num_t)ledGreen, 1);
-            gpio_set_level((gpio_num_t)ledRed, 1);
-            gpio_set_level((gpio_num_t)ledBlue, 1);
-
             playAudio("/downloading.wav", "/littlefs");
             return;
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
-}
-
-
-int waitForStudy(int pin, int pin2, int led, const char *message)
-{
-    ESP_LOGI(TAG, "%s", message);
-    gpio_set_level((gpio_num_t)led, 1);
-
-    while (true) {
-        if (gpio_get_level((gpio_num_t)pin) == 0) {
-            gpio_set_level((gpio_num_t)led, 0);
-            vTaskDelay(pdMS_TO_TICKS(300));
-            return 1;
-        }
-
-        if (gpio_get_level((gpio_num_t)pin2) == 0) {
-            gpio_set_level((gpio_num_t)led, 0);
-            vTaskDelay(pdMS_TO_TICKS(300));
-            return 4;
         }
 
         vTaskDelay(pdMS_TO_TICKS(50));

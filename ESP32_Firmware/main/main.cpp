@@ -11,9 +11,7 @@
 
 #include <ArduinoJson.h>
 
-// Your existing headers (to be converted later)
 #include "wifi_setup.h"
-#include "setup_leds.h"
 #include "setup_buttons.h"
 #include "http_setup.h"
 #include "audio_setup.h"
@@ -35,13 +33,11 @@ extern "C" void app_main(void)
 
     // Hardware setup
     setupButtons();
-    setupLeds();
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     setupAudio(); // setup audio  + extflash
     setupWiFi();
-
 
     /*
     clearIntFiles();
@@ -56,22 +52,12 @@ extern "C" void app_main(void)
     DownloadSpecificAudio("/end.wav");
     */
 
-    
-
-    
-
-
     // Startup audio
     playAudio("/start.wav", "/littlefs");
     playAudio("/response.wav", "/littlefs");
 
     // Wait for user action
-    waitForButton(
-        ledGreen,
-        ledBlue,
-        ledRed,
-        "Press YELLOW to start or BLUE to download the audio files"
-    );
+    waitForButton("Press YELLOW to start or BLUE to download the audio files");
 
     // Get cards from server
     std::string cardData = HTTPboot();
@@ -93,11 +79,6 @@ extern "C" void app_main(void)
     // Download all audio files
     downloadAllAudio_ext(cards);
 
-    // Reset LEDs (because of waitForButton)
-    gpio_set_level(ledGreen, 0);
-    gpio_set_level(ledRed, 0);
-    gpio_set_level(ledBlue, 0);
-
     playAudio("/download.wav", "/littlefs");
 
     // Study session
@@ -111,23 +92,19 @@ extern "C" void app_main(void)
             ESP_LOGI(TAG, "Front: %s", front.c_str());
 
             // Front
-            gpio_set_level(ledBlue, 1);
             ESP_LOGI(TAG, "Press START to see the back.");
             playFrontAudio(button3Pin, button1Pin, cardId);
-            gpio_set_level(ledBlue, 0);
 
             // Back
             ESP_LOGI(TAG, "Back: %s", back.c_str());
             ESP_LOGI(TAG, "Decide");
 
-            gpio_set_level(ledGreen, 1);
             int ease = playBackAudio(
                 button1Pin,
                 button2Pin,
                 button3Pin,
                 cardId
             );
-            gpio_set_level(ledGreen, 0);
 
             // Store result
             JsonObject r = easeArray.add<JsonObject>();
@@ -141,13 +118,12 @@ extern "C" void app_main(void)
     serializeJson(easeDoc, jsonOut);
 
     ESP_LOGI(TAG, "Result JSON: %s", jsonOut.c_str());
-    HTTPout(ledRed, jsonOut);
+    HTTPout(jsonOut);
 
     // Session complete
     playAudio("/end.wav", "/littlefs");
     ESP_LOGI(TAG, "Study session complete.");
 
-    gpio_set_level(ledGreen, 1);
 
     // app_main should not exit
     while (true) {
